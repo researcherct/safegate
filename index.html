@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeGate: Pre-Execution Safety Gate for LLM-Based Robot Systems</title>
+    <style>
+        :root {
+            --primary: #1C4D8D;
+            --primary-light: #e8eef6;
+            --text: #1e293b;
+            --text-secondary: #475569;
+            --bg: #ffffff;
+            --section-bg: #f8fafc;
+            --border: #e2e8f0;
+            --accent: #2563eb;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            color: var(--text);
+            line-height: 1.7;
+            background: var(--bg);
+        }
+
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 60px 20px 50px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        .header .subtitle {
+            font-size: 20px;
+            opacity: 1;
+            color: #e0eaff;
+            max-width: 800px;
+            margin: 0 auto 24px;
+            font-weight: 400;
+        }
+
+        .header .authors {
+            font-size: 15px;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        .header .links {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .header .links a {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-primary:hover { background: #e8eef6; }
+
+        .btn-outline {
+            border: 1.5px solid rgba(255,255,255,0.6);
+            color: white;
+        }
+
+        .btn-outline:hover { background: rgba(255,255,255,0.15); }
+
+        /* Content */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        section {
+            padding: 50px 0;
+        }
+
+        section:nth-child(even) {
+            background: var(--section-bg);
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 24px 0 10px;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        /* Architecture image */
+        .arch-img {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        /* GIF grid */
+        .gif-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .gif-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+        }
+
+        .gif-card img {
+            width: 100%;
+            display: block;
+        }
+
+        .gif-card .caption {
+            padding: 10px 14px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Results image */
+        .results-img {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover td {
+            background: var(--primary-light);
+        }
+
+        /* Pipeline steps */
+        .pipeline {
+            display: flex;
+            gap: 0;
+            margin: 24px 0;
+            flex-wrap: wrap;
+        }
+
+        .pipeline-step {
+            flex: 1;
+            min-width: 140px;
+            padding: 16px;
+            text-align: center;
+            background: var(--primary-light);
+            border-right: 2px solid white;
+            position: relative;
+        }
+
+        .pipeline-step:last-child { border-right: none; }
+
+        .pipeline-step .step-num {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .pipeline-step .step-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .pipeline-step .step-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Video */
+        .video-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .video-container video {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .footer a { color: #93c5fd; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            .header h1 { font-size: 32px; }
+            .header .subtitle { font-size: 16px; }
+            .gif-grid { grid-template-columns: 1fr; }
+            .pipeline { flex-direction: column; }
+            .pipeline-step { border-right: none; border-bottom: 2px solid white; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <h1>SAFEGATE</h1>
+    <p class="subtitle">Neurosymbolic Pre-Execution Safety Gate and Task Safety Contracts for LLM-Based Robot Systems</p>
+    <p class="authors">Anonymous Authors</p>
+    <div class="links">
+        <a href="#abstract" class="btn-primary">Abstract</a>
+        <a href="#method" class="btn-primary">Method</a>
+        <a href="#results" class="btn-primary">Results</a>
+        <a href="https://github.com" class="btn-outline">Code (Coming Soon)</a>
+        <a href="#" class="btn-outline">Paper (Coming Soon)</a>
+    </div>
+</div>
+
+<!-- Abstract -->
+<section id="abstract">
+    <div class="container">
+        <h2>Abstract</h2>
+        <p>
+            Large Language Models (LLMs) are increasingly used to plan and generate robot actions from natural language commands. However, current safety approaches for LLM-based robot systems suffer from critical limitations: binary safety judgments with no deferral mechanism, absence of formal safety contracts, single-pass reasoning vulnerable to hallucination, and context-blind evaluation that ignores scene and user factors.
+        </p>
+        <p>
+            We present <strong>SafeGate</strong>, a neurosymbolic pre-execution safety gate that combines LLM-based hazard identification with deterministic safety logic and formal task safety contracts. SafeGate introduces a three-decision framework (AUTHORIZE / DEFER / REJECT) that enables the system to request clarification for ambiguous tasks rather than making potentially dangerous assumptions. Our multi-stage pipeline includes consistency-checked hazard identification, canonical hazard template matching, deterministic gate rules, and a verification layer that cross-checks decisions.
+        </p>
+        <p>
+            We evaluate SafeGate on a benchmark of 230 robot tasks spanning safe, unsafe, and ambiguous scenarios across diverse environments. SafeGate achieves a 100% safety rate (blocking all unsafe tasks) while maintaining 85%+ feasibility (authorizing safe tasks), significantly outperforming baseline approaches including direct LLM prompting (SELP) and rule-based systems (RoboGuard).
+        </p>
+    </div>
+</section>
+
+<!-- Method -->
+<section id="method">
+    <div class="container">
+        <h2>Method</h2>
+        <p>SafeGate processes each robot command through a multi-stage neurosymbolic pipeline before execution is permitted:</p>
+
+        <div class="pipeline">
+            <div class="pipeline-step">
+                <div class="step-num">1</div>
+                <div class="step-title">Hazard ID</div>
+                <div class="step-desc">LLM identifies hazards, unknowns, severity</div>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-num">2</div>
+                <div class="step-title">Canonicalization</div>
+                <div class="step-desc">Map to verified hazard template library</div>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-num">3</div>
+                <div class="step-title">Gate Logic</div>
+                <div class="step-desc">Deterministic rules: AUTH / DEFER / REJECT</div>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-num">4</div>
+                <div class="step-title">Verification</div>
+                <div class="step-desc">Cross-check via Q1/Q2/Q3 reasoning</div>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-num">5</div>
+                <div class="step-title">Contract</div>
+                <div class="step-desc">Generate safety pre/post/invariants</div>
+            </div>
+        </div>
+
+        <h3>System Architecture</h3>
+        <img src="assets/architecture.png" alt="SafeGate Architecture" class="arch-img">
+
+        <h3>Key Innovations</h3>
+        <p><strong>Three-Decision Framework:</strong> Unlike binary safe/unsafe approaches, SafeGate introduces DEFER — requesting clarification for ambiguous tasks (e.g., "bring hot coffee to my daughter" — how old is the daughter?).</p>
+        <p><strong>Consistency Voting:</strong> Hazard identification runs 3 times with majority voting to filter LLM hallucinations. Only hazards confirmed by 2+ runs are retained.</p>
+        <p><strong>Task Safety Contracts:</strong> Each authorized task receives a formal safety contract with preconditions, postconditions, invariants, guards, and abort conditions that can be monitored during execution.</p>
+        <p><strong>Scene-Aware Capabilities:</strong> Robot capability profiles are dynamically adjusted based on scene context — a robot in a warehouse is assumed to handle heavy loads; the same command in a nursery triggers stricter safety checks.</p>
+    </div>
+</section>
+
+<!-- Simulation Experiments -->
+<section id="simulations">
+    <div class="container">
+        <h2>Simulation Experiments</h2>
+        <p>We validate SafeGate in AI2-THOR simulation environments, demonstrating end-to-end task execution with safety contracts enforced at runtime.</p>
+
+        <div class="gif-grid">
+            <div class="gif-card">
+                <img src="assets/gifs/sim1_composite.gif" alt="Simulation 1 - Composite View">
+                <div class="caption">Simulation Trial 1 — Composite (Agent + Top-Down View)</div>
+            </div>
+            <div class="gif-card">
+                <img src="assets/gifs/sim2_composite.gif" alt="Simulation 2 - Composite View">
+                <div class="caption">Simulation Trial 2 — Composite (Agent + Top-Down View)</div>
+            </div>
+            <div class="gif-card">
+                <img src="assets/gifs/sim1_agent.gif" alt="Simulation 1 - Agent View">
+                <div class="caption">Trial 1 — Agent First-Person View</div>
+            </div>
+            <div class="gif-card">
+                <img src="assets/gifs/sim2_agent.gif" alt="Simulation 2 - Agent View">
+                <div class="caption">Trial 2 — Agent First-Person View</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Results -->
+<section id="results">
+    <div class="container">
+        <h2>Results</h2>
+        <p>SafeGate is evaluated on a benchmark of 230 tasks across safe, unsafe, and ambiguous categories.</p>
+
+        <img src="assets/results.png" alt="Benchmark Results" class="results-img">
+
+        <h3>Comparison with Baselines</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Safety Rate</th>
+                    <th>Feasibility Rate</th>
+                    <th>Deferral Support</th>
+                    <th>Safety Contracts</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>SafeGate (Ours)</strong></td>
+                    <td><strong>100%</strong></td>
+                    <td><strong>85%+</strong></td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                </tr>
+                <tr>
+                    <td>Base LLM (GPT-4o)</td>
+                    <td>~75%</td>
+                    <td>~90%</td>
+                    <td>No</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>SELP</td>
+                    <td>~85%</td>
+                    <td>~70%</td>
+                    <td>No</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>RoboGuard</td>
+                    <td>~80%</td>
+                    <td>~65%</td>
+                    <td>No</td>
+                    <td>Partial</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Real-World -->
+<section id="real-world">
+    <div class="container">
+        <h2>Real-World Experiments</h2>
+        <p>SafeGate is deployed on physical robots including a 4-DOF table-top robot arm (Raccoon) with USB camera for vision-guided manipulation, and the Hamster-S mobile robot with gripper. The system performs camera-based scene understanding, safety validation, and code generation for real-world task execution.</p>
+    </div>
+</section>
+
+<!-- BibTeX -->
+<section id="citation">
+    <div class="container">
+        <h2>Citation</h2>
+        <pre style="background: #f1f5f9; padding: 20px; border-radius: 8px; font-size: 13px; overflow-x: auto; border: 1px solid var(--border);">@article{safegate2026,
+  title={SafeGate: Neurosymbolic Pre-Execution Safety Gate and Task Safety Contracts for LLM-Based Robot Systems},
+  author={Anonymous},
+  year={2026}
+}</pre>
+    </div>
+</section>
+
+<!-- Footer -->
+<div class="footer">
+    <p>SafeGate &copy; 2026 | <a href="https://sites.google.com/view/safegate2026">Google Sites</a></p>
+</div>
+
+</body>
+</html>
